@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 public class StorageFile implements StorageInterface {
@@ -22,7 +23,8 @@ public class StorageFile implements StorageInterface {
     }
 
     @Override
-    public void loadImage() {
+    public Optional<ByteBuffer> loadImage() {
+        return null;
     }
 }
 

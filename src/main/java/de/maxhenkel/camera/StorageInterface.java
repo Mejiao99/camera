@@ -2,6 +2,7 @@ package de.maxhenkel.camera;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 interface StorageInterface {
@@ -10,6 +11,6 @@ interface StorageInterface {
 
     void saveImage(File file, ByteBuffer data, UUID uuid);
 
-    void loadImage();
+    Optional<ByteBuffer> loadImage();
 }
 
