@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class StorageFile implements IStorage {
+    private File file;
+
     public static File getImageFile(File file, UUID uuid) {
         File imageFolder = new File(file, "camera_images");
         return new File(imageFolder, uuid.toString() + ".png");
@@ -17,7 +19,7 @@ public class StorageFile implements IStorage {
 
 
     @Override
-    public void saveImage(File file, UUID uuid, ByteBuffer data) {
+    public void saveImage(UUID uuid, ByteBuffer data) {
         File image = getImageFile(file, uuid);
         image.mkdirs();
         ImageIO.write((RenderedImage) data, "png", image);
@@ -25,7 +27,7 @@ public class StorageFile implements IStorage {
 
 
     @Override
-    public Optional<ByteBuffer> loadImage(File file, UUID uuid) {
+    public Optional<ByteBuffer> loadImage(UUID uuid) {
         File image = getImageFile(file, uuid);
         FileInputStream fis = new FileInputStream(image);
         Optional<ByteBuffer> bufferedImage = ImageIO.read(fis);

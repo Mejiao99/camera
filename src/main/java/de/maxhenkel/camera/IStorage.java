@@ -7,8 +7,8 @@ import java.util.UUID;
 
 interface IStorage {
 
-    void saveImage(File file, UUID uuid, ByteBuffer data);
+    void saveImage(UUID uuid, ByteBuffer data);
 
-    Optional<ByteBuffer> loadImage(File file, UUID uuid);
+    Optional<ByteBuffer> loadImage(UUID uuid);
 }
 
