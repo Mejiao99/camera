@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-interface IStorage {
+public interface IStorage {
 
     void saveImage(Path worldPath, UUID uuid, ByteBuffer data);
 
