@@ -1,14 +1,15 @@
 package de.maxhenkel.camera;
 
-import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
+
 interface IStorage {
 
-    void saveImage(UUID uuid, ByteBuffer data);
+    void saveImage(Path worldPath, UUID uuid, ByteBuffer data);
 
-    Optional<ByteBuffer> loadImage(UUID uuid);
+    Optional<ByteBuffer> loadImage(Path worldPath, UUID uuid);
 }
 

@@ -1,12 +1,16 @@
 package de.maxhenkel.camera;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ImageTools {
@@ -24,7 +28,7 @@ public class ImageTools {
     public static BufferedImage fromBytes(byte[] data) throws IOException {
         ImageIO.setUseCache(false);
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        BufferedImage image=ImageIO.read(bais);
+        BufferedImage image = ImageIO.read(bais);
         bais.close();
         return image;
     }
@@ -40,27 +44,35 @@ public class ImageTools {
         return dimg;
     }
 
-    public static File getImageFile(EntityPlayerMP playerMP, UUID uuid){
-        File imageFolder=new File(playerMP.getServerWorld().getSaveHandler().getWorldDirectory(), "camera_images");
-        return new File(imageFolder, uuid.toString() +".png");
+    static IStorage getStorage() {
+        return new StorageFile();
+    }
+
+
+    public static File getImageFile(EntityPlayerMP playerMP, UUID uuid) {
+        File imageFolder = new File(playerMP.getServerWorld().getSaveHandler().getWorldDirectory(), "camera_images");
+        return new File(imageFolder, uuid.toString() + ".png");
     }
 
     public static void saveImage(EntityPlayerMP playerMP, UUID uuid, BufferedImage bufferedImage) throws IOException {
-        File image=getImageFile(playerMP, uuid);
-        image.mkdirs();
-        ImageIO.write(bufferedImage, "png", image);
+        final IStorage storage = getStorage();
+        final byte[] bytes = toBytes(bufferedImage);
+        storage.saveImage(playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(), uuid, ByteBuffer.wrap(bytes));
+        System.out.println("saveImage");
     }
 
+
     public static BufferedImage loadImage(EntityPlayerMP playerMP, UUID uuid) throws IOException {
-        File image=ImageTools.getImageFile(playerMP, uuid);
+        final IStorage storage = getStorage();
 
-        FileInputStream fis=new FileInputStream(image);
+        final Optional<ByteBuffer> optionalByteBuffer = storage.loadImage(playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(), uuid);
 
-        BufferedImage bufferedImage=ImageIO.read(fis);
-
-        if(bufferedImage==null){
-            throw new IOException("BufferedImage is null");
+        if (!optionalByteBuffer.isPresent()) {
+            throw new IOException("byteBuffer isn't present");
         }
+        final ByteBuffer byteBuffer = optionalByteBuffer.get();
+        final byte[] bytes = byteBuffer.array();
+        BufferedImage bufferedImage = fromBytes(bytes);
 
         return bufferedImage;
     }
