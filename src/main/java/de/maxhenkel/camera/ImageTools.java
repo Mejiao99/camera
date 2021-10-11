@@ -72,7 +72,7 @@ public class ImageTools {
         }
         final ByteBuffer byteBuffer = optionalByteBuffer.get();
         final byte[] bytes = byteBuffer.array();
-        BufferedImage bufferedImage = fromBytes(bytes);
+        final BufferedImage bufferedImage = fromBytes(bytes);
 
         return bufferedImage;
     }
