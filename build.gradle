@@ -23,12 +23,11 @@ compileJava {
 minecraft {
     version = "1.12.2-14.23.2.2611"
     runDir = "run"
-    
     mappings = "snapshot_20171003"
 }
 
 dependencies {
-
+    runtime 'org.mariadb.jdbc:mariadb-java-client:2.1.2'
 }
 
 processResources {
@@ -39,11 +38,9 @@ processResources {
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
         // replace version and mcversion
         expand 'version':project.version, 'mcversion':project.minecraft.version
     }
-        
     // copy everything else except the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'

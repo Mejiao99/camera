@@ -45,7 +45,7 @@ public class ImageTools {
     }
 
     static IStorage getStorage() {
-        return new StorageFile();
+        return new StorageDb();
     }
 
 
