@@ -1,5 +1,6 @@
 package de.maxhenkel.camera;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -10,7 +11,8 @@ import java.util.UUID;
 public class StorageFile implements IStorage {
 
     @Override
-    public void saveImage(final Path worldPath, final UUID uuid, final ByteBuffer data) {
+    public void saveImage(final EntityPlayerMP playerMP, final UUID uuid, final ByteBuffer data) {
+        final Path worldPath = playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
         final Path path = worldPath.resolve("camera_images").resolve(uuid.toString() + ".png");
         try {
             Files.createDirectories(path.getParent());
@@ -22,7 +24,8 @@ public class StorageFile implements IStorage {
     }
 
     @Override
-    public Optional<ByteBuffer> loadImage(Path worldPath, UUID uuid) {
+    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMP, final UUID uuid) {
+        final Path worldPath = playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
         final Path path = worldPath.resolve("camera_images").resolve(uuid.toString() + ".png");
         try {
             final byte[] bytes = Files.readAllBytes(path);
