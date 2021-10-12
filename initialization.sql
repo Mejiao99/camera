@@ -4,9 +4,11 @@ use camera_storage;
 CREATE TABLE t_camera_storage
 (
     uuid            varchar(64),
-    raw_data        blob,
+    raw_data        longblob,
     player_name     varchar(20),
-    player_position varchar(40),
+    posX            int(11),
+    posY            int(11),
+    posZ            int(11),
     world_name      varchar(64),
     time            timestamp
 );
@@ -17,7 +19,7 @@ alter table t_camera_storage
 
 
 insert into t_camera_storage
-values (?, ?, ?, ?, ?, ?);
+values (?, ?, ?, ?, ?, ?, ?, ?);
 
 
 
