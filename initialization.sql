@@ -11,10 +11,13 @@ CREATE TABLE t_camera_storage
     time            timestamp
 );
 
+alter table t_camera_storage
+    add constraint t_camera_storage_pk
+        primary key (uuid);
 
 
 insert into t_camera_storage
-values (?, ?,?,?,?,?);
+values (?, ?, ?, ?, ?, ?);
 
 
 
