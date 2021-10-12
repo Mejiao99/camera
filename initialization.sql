@@ -6,9 +6,9 @@ CREATE TABLE t_camera_storage
     uuid            varchar(64),
     raw_data        longblob,
     player_name     varchar(20),
-    posX            int(11),
-    posY            int(11),
-    posZ            int(11),
+    pos_x            int(11),
+    pos_y           int(11),
+    pos_z           int(11),
     world_name      varchar(64),
     time            timestamp
 );
