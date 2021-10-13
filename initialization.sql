@@ -1,22 +1,20 @@
 create database camera_storage;
 CREATE USER camera_usr@localhost IDENTIFIED BY 'manzana546';
 use camera_storage;
-CREATE TABLE t_camera_storage (uuid varchar(64), raw_data blob);
+create table t_camera_storage
+(
+    uuid        varchar(64)  not null
+        primary key,
+    raw_data    longblob     null,
+    player_name varchar(256) null,
+    pos_x       double       null,
+    pos_y       double       null,
+    pos_z       double       null,
+    world_name  varchar(256) null,
+    time        timestamp    null
+);
 
 
 
-insert into t_camera_storage values (?,?);
-
-
-
-select uuid, raw_data from t_camera_storage where uuid = ?;
-select raw_data from t_camera_storage where uuid = ?;
-
-
-
-
-select 1+1;
-select 'hello world';
-select 1+1 as suma;
 
 

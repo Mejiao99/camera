@@ -57,15 +57,14 @@ public class ImageTools {
     public static void saveImage(EntityPlayerMP playerMP, UUID uuid, BufferedImage bufferedImage) throws IOException {
         final IStorage storage = getStorage();
         final byte[] bytes = toBytes(bufferedImage);
-        storage.saveImage(playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(), uuid, ByteBuffer.wrap(bytes));
-        System.out.println("saveImage");
+        storage.saveImage(playerMP, uuid, ByteBuffer.wrap(bytes));
     }
 
 
     public static BufferedImage loadImage(EntityPlayerMP playerMP, UUID uuid) throws IOException {
         final IStorage storage = getStorage();
 
-        final Optional<ByteBuffer> optionalByteBuffer = storage.loadImage(playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(), uuid);
+        final Optional<ByteBuffer> optionalByteBuffer = storage.loadImage(playerMP, uuid);
 
         if (!optionalByteBuffer.isPresent()) {
             throw new IOException("byteBuffer isn't present");

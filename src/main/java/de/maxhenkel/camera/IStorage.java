@@ -1,15 +1,15 @@
 package de.maxhenkel.camera;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
 
 public interface IStorage {
 
-    void saveImage(Path worldPath, UUID uuid, ByteBuffer data);
+    void saveImage(EntityPlayerMP playerMp, UUID uuid, ByteBuffer data);
 
-    Optional<ByteBuffer> loadImage(Path worldPath, UUID uuid);
+    Optional<ByteBuffer> loadImage(EntityPlayerMP playerMp, UUID uuid);
 }
 
