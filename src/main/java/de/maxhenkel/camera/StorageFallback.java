@@ -8,9 +8,13 @@ import java.util.UUID;
 
 public class StorageFallback implements IStorage {
 
-    IStorage primaryStorage;
-    IStorage secondaryStorage;
+    private final IStorage primaryStorage;
+    private final IStorage secondaryStorage;
 
+    public StorageFallback(final IStorage primaryStorage, final IStorage secondaryStorage) {
+        this.primaryStorage = primaryStorage;
+        this.secondaryStorage = secondaryStorage;
+    }
 
     @Override
     public void saveImage(final EntityPlayerMP playerMp, final UUID uuid, final ByteBuffer data) {
@@ -21,11 +25,11 @@ public class StorageFallback implements IStorage {
     @Override
     public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
         final Optional<ByteBuffer> optPrimary = primaryStorage.loadImage(playerMp, uuid);
-        final Optional<ByteBuffer> optSecondary = secondaryStorage.loadImage(playerMp, uuid);
-
         if (optPrimary.isPresent()) {
             return optPrimary;
         }
+
+        final Optional<ByteBuffer> optSecondary = secondaryStorage.loadImage(playerMp, uuid);
         if (optSecondary.isPresent()) {
             primaryStorage.saveImage(playerMp, uuid, optSecondary.get());
             return optPrimary;
