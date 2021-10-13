@@ -1,6 +1,7 @@
 package de.maxhenkel.camera;
 
 import net.minecraft.entity.player.EntityPlayerMP;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.ByteBuffer;
 import java.sql.Blob;
@@ -22,11 +23,15 @@ public class StorageDb implements IStorage {
              final PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,? )")
         ) {
-            final String playerName = playerMp.getName();
+
+            // https://minecraft.fandom.com/wiki/Player
+            // According to the wiki, the java version of minecraft only accepts up to 16 characters for the name.
+            final String playerName = StringUtils.left(playerMp.getName(), 16);
             final double posX = playerMp.posX;
             final double posY = playerMp.posY;
             final double posZ = playerMp.posZ;
-            final String playerWorld = playerMp.getServer().getName();
+            final String world_name = StringUtils.left(playerMp.getServer().getName(), 256);
+
 
             final Blob blob = conn.createBlob();
             blob.setBytes(1, data.array());
@@ -36,7 +41,7 @@ public class StorageDb implements IStorage {
             stmt.setDouble(4, posX);
             stmt.setDouble(5, posY);
             stmt.setDouble(6, posZ);
-            stmt.setString(7, playerWorld);
+            stmt.setString(7, world_name);
             stmt.setTimestamp(8, Timestamp.from(Instant.now()));
             stmt.execute();
             conn.commit();
