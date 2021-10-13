@@ -17,30 +17,27 @@ import java.util.UUID;
 public class StorageDb implements IStorage {
 
     @Override
-    public void saveImage(final EntityPlayerMP playerMP, final UUID uuid, final ByteBuffer data) {
+    public void saveImage(final EntityPlayerMP playerMp, final UUID uuid, final ByteBuffer data) {
         try (final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
              final PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,? )")
         ) {
-            final String playerName = playerMP.getName();
-            final int posX = playerMP.getPosition().getX();
-            final int posY = playerMP.getPosition().getY();
-            final int posZ = playerMP.getPosition().getZ();
-            final String playerWorld = playerMP.getServer().getName();
-            final Instant instant = Instant.now();
-            final Timestamp current = Timestamp.from(instant);
-
+            final String playerName = playerMp.getName();
+            final double posX = playerMp.posX;
+            final double posY = playerMp.posY;
+            final double posZ = playerMp.posZ;
+            final String playerWorld = playerMp.getServer().getName();
 
             final Blob blob = conn.createBlob();
             blob.setBytes(1, data.array());
             stmt.setString(1, uuid.toString());
             stmt.setBlob(2, blob);
             stmt.setString(3, playerName);
-            stmt.setInt(4, posX);
-            stmt.setInt(5, posY);
-            stmt.setInt(6, posZ);
+            stmt.setDouble(4, posX);
+            stmt.setDouble(5, posY);
+            stmt.setDouble(6, posZ);
             stmt.setString(7, playerWorld);
-            stmt.setTimestamp(8, current);
+            stmt.setTimestamp(8, Timestamp.from(Instant.now()));
             stmt.execute();
             conn.commit();
         } catch (final SQLException throwables) {
@@ -50,7 +47,7 @@ public class StorageDb implements IStorage {
     }
 
     @Override
-    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMP, final UUID uuid) {
+    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
         try (final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
              final PreparedStatement stmt = conn.prepareStatement(
                      "select raw_data from t_camera_storage where uuid = ?;")) {

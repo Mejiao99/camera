@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public interface IStorage {
 
-    void saveImage(EntityPlayerMP playerMP, UUID uuid, ByteBuffer data);
+    void saveImage(EntityPlayerMP playerMp, UUID uuid, ByteBuffer data);
 
-    Optional<ByteBuffer> loadImage(EntityPlayerMP playerMP, UUID uuid);
+    Optional<ByteBuffer> loadImage(EntityPlayerMP playerMp, UUID uuid);
 }
 

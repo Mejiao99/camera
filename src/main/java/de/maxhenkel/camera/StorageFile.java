@@ -11,8 +11,8 @@ import java.util.UUID;
 public class StorageFile implements IStorage {
 
     @Override
-    public void saveImage(final EntityPlayerMP playerMP, final UUID uuid, final ByteBuffer data) {
-        final Path worldPath = playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
+    public void saveImage(final EntityPlayerMP playerMp, final UUID uuid, final ByteBuffer data) {
+        final Path worldPath = playerMp.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
         final Path path = worldPath.resolve("camera_images").resolve(uuid.toString() + ".png");
         try {
             Files.createDirectories(path.getParent());
@@ -24,8 +24,8 @@ public class StorageFile implements IStorage {
     }
 
     @Override
-    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMP, final UUID uuid) {
-        final Path worldPath = playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
+    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
+        final Path worldPath = playerMp.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
         final Path path = worldPath.resolve("camera_images").resolve(uuid.toString() + ".png");
         try {
             final byte[] bytes = Files.readAllBytes(path);
