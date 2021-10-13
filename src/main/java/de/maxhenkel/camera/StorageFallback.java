@@ -20,14 +20,15 @@ public class StorageFallback implements IStorage {
 
     @Override
     public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
-        final Optional<ByteBuffer> optionalPrimary = primaryStorage.loadImage(playerMp, uuid);
-        final Optional<ByteBuffer> optionalSecondary = secondaryStorage.loadImage(playerMp, uuid);
-        if (!optionalPrimary.isPresent()) {
-            if (optionalSecondary.isPresent()) {
-                primaryStorage.saveImage(playerMp, uuid, optionalSecondary.get());
-                return optionalPrimary;
-            }
+        final Optional<ByteBuffer> optPrimary = primaryStorage.loadImage(playerMp, uuid);
+        final Optional<ByteBuffer> optSecondary = secondaryStorage.loadImage(playerMp, uuid);
 
+        if (optPrimary.isPresent()) {
+            return optPrimary;
+        }
+        if (optSecondary.isPresent()) {
+            primaryStorage.saveImage(playerMp, uuid, optSecondary.get());
+            return optPrimary;
         }
         return Optional.empty();
     }
