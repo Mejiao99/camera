@@ -1,12 +1,16 @@
 package de.maxhenkel.camera;
 
 import net.minecraft.entity.player.EntityPlayerMP;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class StorageFile implements IStorage {
 
@@ -35,6 +39,20 @@ public class StorageFile implements IStorage {
             e.printStackTrace();
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Set<UUID> listUUID(EntityPlayerMP playerMp) throws Exception {
+        final Path worldPath = playerMp.getServerWorld().getSaveHandler().getWorldDirectory().toPath();
+        final Path path = worldPath.resolve("camera_images");
+        return Files.walk(path)
+                .map(namePath -> namePath.getFileName())
+                .map(fileNamePath -> fileNamePath.toString())
+                .filter(name -> name.endsWith(".png"))
+                .map(name -> StringUtils.substringBeforeLast(name, "."))
+                .map(uuidStr -> UUID.fromString(uuidStr))
+                .collect(Collectors.toSet());
+
     }
 
 }
