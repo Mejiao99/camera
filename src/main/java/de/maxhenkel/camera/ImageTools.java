@@ -1,5 +1,6 @@
 package de.maxhenkel.camera;
 
+import de.maxhenkel.camera.proxy.CommonProxy;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import javax.imageio.ImageIO;
@@ -7,9 +8,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,36 +45,43 @@ public class ImageTools {
         return dimg;
     }
 
-    static IStorage getStorage() {
-        return new StorageFile();
-    }
-
-
-    public static File getImageFile(EntityPlayerMP playerMP, UUID uuid) {
-        File imageFolder = new File(playerMP.getServerWorld().getSaveHandler().getWorldDirectory(), "camera_images");
-        return new File(imageFolder, uuid.toString() + ".png");
-    }
-
     public static void saveImage(EntityPlayerMP playerMP, UUID uuid, BufferedImage bufferedImage) throws IOException {
-        final IStorage storage = getStorage();
         final byte[] bytes = toBytes(bufferedImage);
-        storage.saveImage(playerMP, uuid, ByteBuffer.wrap(bytes));
+
+        final ImageMetadata imageMetadata = new ImageMetadata();
+        imageMetadata.setPlayerName(playerMP.getName());
+        imageMetadata.setWorldName(playerMP.getServerWorld().getWorldInfo().getWorldName());
+        imageMetadata.setPosX(playerMP.posX);
+        imageMetadata.setPosY(playerMP.posY);
+        imageMetadata.setPosZ(playerMP.posZ);
+        imageMetadata.setTimestamp(Instant.now());
+        try {
+            CommonProxy.storage.saveImage(
+                    playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(),
+                    uuid,
+                    imageMetadata,
+                    ByteBuffer.wrap(bytes));
+        } catch (final Exception e) {
+            throw new IOException("Error saving: " + uuid, e);
+        }
     }
 
 
-    public static BufferedImage loadImage(EntityPlayerMP playerMP, UUID uuid) throws IOException {
-        final IStorage storage = getStorage();
+    public static BufferedImage loadImage(final EntityPlayerMP playerMP, final UUID uuid) throws IOException {
 
-        final Optional<ByteBuffer> optionalByteBuffer = storage.loadImage(playerMP, uuid);
-
-        if (!optionalByteBuffer.isPresent()) {
-            throw new IOException("byteBuffer isn't present");
+        final Optional<ImageAndMetadata> optImageAndMetadata;
+        try {
+            optImageAndMetadata = CommonProxy.storage.loadImage(
+                    playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(),
+                    uuid);
+        } catch (final Exception e) {
+            throw new IOException("Error loading: " + uuid, e);
         }
-        final ByteBuffer byteBuffer = optionalByteBuffer.get();
-        final byte[] bytes = byteBuffer.array();
-        final BufferedImage bufferedImage = fromBytes(bytes);
 
-        return bufferedImage;
+        if (!optImageAndMetadata.isPresent()) {
+            throw new IOException("Image not found: " + uuid);
+        }
+        return fromBytes(optImageAndMetadata.get().getByteBuffer().array());
     }
 
 }

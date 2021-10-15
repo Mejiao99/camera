@@ -1,27 +1,41 @@
 package de.maxhenkel.camera.proxy;
 
+import de.maxhenkel.camera.IStorage;
 import de.maxhenkel.camera.Main;
+import de.maxhenkel.camera.StorageDb;
+import de.maxhenkel.camera.StorageFallback;
+import de.maxhenkel.camera.StorageFile;
 import de.maxhenkel.camera.gui.GuiHandler;
-import de.maxhenkel.camera.net.*;
+import de.maxhenkel.camera.net.MessageImage;
+import de.maxhenkel.camera.net.MessageImageUnavailable;
+import de.maxhenkel.camera.net.MessagePartialImage;
+import de.maxhenkel.camera.net.MessageRequestImage;
+import de.maxhenkel.camera.net.MessageTakeImage;
+import de.maxhenkel.camera.net.MessageUpdateImage;
+import de.maxhenkel.camera.net.PacketManager;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.text.SimpleDateFormat;
 
 public class CommonProxy {
 
-    public static SimpleDateFormat imageDateFormat=new SimpleDateFormat("MM/dd/yyyy HH:mm");
-    public static long imageCooldown=5000;
+    public static SimpleDateFormat imageDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+    public static long imageCooldown = 5000;
+
+    public static String connectionUrl = null;
+    public static String dbUser = null;
+    public static String dbPassword = null;
+
 
     public static SimpleNetworkWrapper simpleNetworkWrapper;
     public static PacketManager manager;
+    public static IStorage storage;
 
     public void preinit(FMLPreInitializationEvent event) {
 
@@ -39,20 +53,31 @@ public class CommonProxy {
 
     public void init(FMLInitializationEvent event) {
         NetworkRegistry.INSTANCE.registerGuiHandler(Main.instance(), new GuiHandler());
+
+        final StorageFile storageFile = new StorageFile();
+        final StorageDb storageDb = new StorageDb();
+
+        storage = new StorageFallback(storageFile, storageDb);
     }
 
     public void postinit(FMLPostInitializationEvent event) {
 
     }
 
-    private void initConfig(FMLPreInitializationEvent event){
+    private void initConfig(FMLPreInitializationEvent event) {
         try {
             Configuration config = new Configuration(event.getSuggestedConfigurationFile());
             config.load();
 
-            String format=config.getString("image_date_format", "camera", "MM/dd/yyyy HH:mm", "The format the date will be displayed on the image");
-            imageCooldown=config.getInt("image_cooldown", "camera", 5000, 100, Integer.MAX_VALUE, "The time in milliseconds the camera will be on cooldown after taking an image");
-            imageDateFormat=new SimpleDateFormat(format);
+            String format = config.getString("image_date_format", "camera", "MM/dd/yyyy HH:mm", "The format the date will be displayed on the image");
+            imageCooldown = config.getInt("image_cooldown", "camera", 5000, 100, Integer.MAX_VALUE, "The time in milliseconds the camera will be on cooldown after taking an image");
+            imageDateFormat = new SimpleDateFormat(format);
+
+            connectionUrl = config.getString("tortilla_camera:jdbc_url", "camera", "FIX ME tortilla_camera:jdbc_url", "Use jdbc:mariadb://localhost:3306/camera_storage");
+            dbUser = config.getString("tortilla_camera:db_user", "camera", "root", "user");
+            dbPassword = config.getString("tortilla_camera:db_pass", "camera", "admin", "pass");
+
+            System.err.println("tortilla_camera:jdbc_url. " + connectionUrl + " - side:" + event.getSide());
 
             config.save();
         } catch (Exception e) {

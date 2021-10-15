@@ -1,8 +1,8 @@
 package de.maxhenkel.camera;
 
-import net.minecraft.entity.player.EntityPlayerMP;
-
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -11,6 +11,7 @@ public class StorageFallback implements IStorage {
 
     private final IStorage primaryStorage;
     private final IStorage secondaryStorage;
+    private boolean migrated;
 
     public StorageFallback(final IStorage primaryStorage, final IStorage secondaryStorage) {
         this.primaryStorage = primaryStorage;
@@ -18,28 +19,52 @@ public class StorageFallback implements IStorage {
     }
 
     @Override
-    public void saveImage(final EntityPlayerMP playerMp, final UUID uuid, final ByteBuffer data) {
-        primaryStorage.saveImage(playerMp, uuid, data);
-        secondaryStorage.saveImage(playerMp, uuid, data);
+    public void saveImage(final Path worldPath, final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
+            throws Exception {
+        migrate(worldPath);
+        primaryStorage.saveImage(worldPath, uuid, metadata, data);
+        secondaryStorage.saveImage(worldPath, uuid, metadata, data);
     }
 
     @Override
-    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
-        final Optional<ByteBuffer> optPrimary = primaryStorage.loadImage(playerMp, uuid);
+    public Optional<ImageAndMetadata> loadImage(final Path worldPath, final UUID uuid) throws Exception {
+        migrate(worldPath);
+        final Optional<ImageAndMetadata> optPrimary = primaryStorage.loadImage(worldPath, uuid);
         if (optPrimary.isPresent()) {
             return optPrimary;
         }
 
-        final Optional<ByteBuffer> optSecondary = secondaryStorage.loadImage(playerMp, uuid);
-        if (optSecondary.isPresent()) {
-            primaryStorage.saveImage(playerMp, uuid, optSecondary.get());
-            return optPrimary;
+        System.err.println("Image not found in primary source. Retrieving it from fallback: " + uuid);
+        final Optional<ImageAndMetadata> optSecondary = secondaryStorage.loadImage(worldPath, uuid);
+        if (!optSecondary.isPresent()) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        final ImageAndMetadata imageAndMetadata = optSecondary.get();
+        primaryStorage.saveImage(worldPath, uuid, imageAndMetadata.getImageMetadata(), imageAndMetadata.getByteBuffer());
+        return optSecondary;
     }
 
     @Override
-    public Set<UUID> listUUID(EntityPlayerMP playerMp) {
-        return null;
+    public Set<UUID> listUuids(final Path worldPath) throws Exception {
+        final Set<UUID> uuids = new HashSet<>();
+        uuids.addAll(primaryStorage.listUuids(worldPath));
+        uuids.addAll(secondaryStorage.listUuids(worldPath));
+        return uuids;
     }
+
+    private void migrate(final Path worldPath) throws Exception {
+        if (migrated) {
+            return;
+        }
+        synchronized (this) {
+            if (migrated) {
+                return;
+            }
+            new StorageMigrator(primaryStorage, secondaryStorage)
+                    .run(worldPath);
+            migrated = true;
+        }
+    }
+
 }
+

@@ -11,9 +11,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(modid = Main.MODID, version = Main.VERSION, acceptedMinecraftVersions=Main.MC_VERSION, updateJSON=Main.UPDATE_JSON, dependencies=Main.DEPENDENCIES)
 public class Main {
-	
+
     public static final String MODID = "camera";
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "1.0.3";
     public static final String MC_VERSION = "[1.12.2]";
 	public static final String UPDATE_JSON = "http://maxhenkel.de/update/camera.json";
 	public static final String DEPENDENCIES = "required-after:forge@[14.23.2.2611,);";
@@ -23,28 +23,29 @@ public class Main {
 
 	@SidedProxy(clientSide="de.maxhenkel.camera.proxy.ClientProxy", serverSide="de.maxhenkel.camera.proxy.CommonProxy")
     public static CommonProxy proxy;
-    
+
 	public Main() {
 		instance=this;
 	}
-	
+
     @EventHandler
     public void preinit(FMLPreInitializationEvent event){
 		proxy.preinit(event);
     }
-    
+
     @EventHandler
     public void init(FMLInitializationEvent event){
+
     	 proxy.init(event);
     }
-    
+
     @EventHandler
     public void postinit(FMLPostInitializationEvent event){
 		proxy.postinit(event);
     }
-    
+
 	public static Main instance() {
 		return instance;
 	}
-	
+
 }

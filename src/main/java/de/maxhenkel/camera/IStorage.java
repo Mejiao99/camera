@@ -1,7 +1,7 @@
 package de.maxhenkel.camera;
 
-import net.minecraft.entity.player.EntityPlayerMP;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -9,10 +9,22 @@ import java.util.UUID;
 
 public interface IStorage {
 
-    void saveImage(EntityPlayerMP playerMp, UUID uuid, ByteBuffer data);
 
-    Optional<ByteBuffer> loadImage(EntityPlayerMP playerMp, UUID uuid);
+    /**
+     * Saves an image. The world path is used to determine the save path when using local files.
+     *
+     */
+    void saveImage(final Path worldPath, final UUID uuid, final ImageMetadata imageMetadata, final ByteBuffer data) throws Exception;
 
-    Set<UUID> listUUID(EntityPlayerMP playerMp) throws Exception;
+    /**
+     * Returns a byte buffer of the image if the image exist or empty if the image doesn't exist.
+     * Throws an exception for unexpected errors.
+     */
+    Optional<ImageAndMetadata> loadImage(final Path worldPath, final UUID uuid) throws Exception;
+
+    /**
+     * Returs a list of all available UUIDs in this storage.
+     */
+    Set<UUID> listUuids(Path worldPath) throws Exception;
 }
 

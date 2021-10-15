@@ -1,14 +1,16 @@
 package de.maxhenkel.camera;
 
-import net.minecraft.entity.player.EntityPlayerMP;
+import de.maxhenkel.camera.proxy.CommonProxy;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashSet;
@@ -19,66 +21,74 @@ import java.util.UUID;
 public class StorageDb implements IStorage {
 
     @Override
-    public void saveImage(final EntityPlayerMP playerMp, final UUID uuid, final ByteBuffer data) {
-        try (final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
+    public void saveImage(final Path worldPath, final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
+            throws Exception {
+        try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,? )")
+                     "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,?)")
         ) {
-            final String playerName = playerMp.getName();
-            final double posX = playerMp.posX;
-            final double posY = playerMp.posY;
-            final double posZ = playerMp.posZ;
-            final String playerWorld = playerMp.getServer().getName();
-
             final Blob blob = conn.createBlob();
             blob.setBytes(1, data.array());
             stmt.setString(1, uuid.toString());
             stmt.setBlob(2, blob);
-            stmt.setString(3, playerName);
-            stmt.setDouble(4, posX);
-            stmt.setDouble(5, posY);
-            stmt.setDouble(6, posZ);
-            stmt.setString(7, playerWorld);
-            stmt.setTimestamp(8, Timestamp.from(Instant.now()));
+            stmt.setString(3, Optional.ofNullable(metadata).map(ImageMetadata::getPlayerName).orElse(""));
+            stmt.setDouble(4, Optional.ofNullable(metadata).map(ImageMetadata::getPosX).orElse(0.0));
+            stmt.setDouble(5, Optional.ofNullable(metadata).map(ImageMetadata::getPosY).orElse(0.0));
+            stmt.setDouble(6, Optional.ofNullable(metadata).map(ImageMetadata::getPosZ).orElse(0.0));
+            stmt.setString(7, Optional.ofNullable(metadata).map(ImageMetadata::getWorldName).orElse(""));
+            stmt.setTimestamp(8,
+                    Timestamp.from(Optional.ofNullable(metadata)
+                            .map(ImageMetadata::getTimestamp)
+                            .orElseGet(Instant::now)));
             stmt.execute();
             conn.commit();
-        } catch (final SQLException throwables) {
-            throwables.printStackTrace();
         }
 
     }
 
     @Override
-    public Optional<ByteBuffer> loadImage(final EntityPlayerMP playerMp, final UUID uuid) {
-        try (final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
+    public Optional<ImageAndMetadata> loadImage(final Path worldPath, final UUID uuid) throws Exception {
+        try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
-                     "select raw_data from t_camera_storage where uuid = ?;")) {
+                     "select raw_data,player_name,pos_x,pos_y,pos_z,world_name,time" +
+                             " from t_camera_storage" +
+                             " where uuid = ?")) {
             stmt.setString(1, uuid.toString());
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                final Blob blob = resultSet.getBlob("raw_data");
-                byte[] bytes = blob.getBytes(1, (int) blob.length());
-                final ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-                return Optional.of(byteBuffer);
+            final ResultSet resultSet = stmt.executeQuery();
+            if (!resultSet.next()) {
+                // No image found with that id
+                return Optional.empty();
             }
-            return Optional.empty();
-        } catch (final SQLException throwables) {
-            throwables.printStackTrace();
+            final ImageMetadata metatada = new ImageMetadata();
+            metatada.setPlayerName(StringUtils.defaultString(resultSet.getString("player_name")));
+            metatada.setWorldName(StringUtils.defaultString(resultSet.getString("world_name")));
+            metatada.setPosX(resultSet.getDouble("pos_x"));
+            metatada.setPosY(resultSet.getDouble("pos_y"));
+            metatada.setPosZ(resultSet.getDouble("pos_z"));
+            metatada.setTimestamp(
+                    Optional.ofNullable(resultSet.getTimestamp("time"))
+                            .map(Timestamp::toInstant)
+                            .orElseGet(Instant::now));
+            final ByteBuffer byteBuffer = ByteBuffer.wrap(
+                    IOUtils.toByteArray(
+                            resultSet.getBlob("raw_data")
+                                    .getBinaryStream()));
+            return Optional.of(
+                    new ImageAndMetadata(
+                            metatada,
+                            byteBuffer));
         }
-
-        return Optional.empty();
     }
 
     @Override
-    public Set<UUID> listUUID(EntityPlayerMP playerMp) throws Exception {
-        final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
-        final PreparedStatement stmt = conn.prepareStatement(
-                "select uuid from t_camera_storage");
-        {
+    public Set<UUID> listUuids(final Path worldPath) throws Exception {
+        try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
+             final PreparedStatement stmt = conn.prepareStatement("select uuid from t_camera_storage")) {
             final ResultSet resultSet = stmt.executeQuery();
             final Set<UUID> uuids = new HashSet<>();
+            final int uuidIdx = resultSet.findColumn("uuid");
             while (resultSet.next()) {
-                uuids.add(UUID.fromString(resultSet.getString(1)));
+                uuids.add(UUID.fromString(resultSet.getString(uuidIdx)));
             }
             return uuids;
         }

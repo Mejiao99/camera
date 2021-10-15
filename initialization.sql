@@ -13,8 +13,3 @@ create table t_camera_storage
     world_name  varchar(256) null,
     time        timestamp    null
 );
-
-
-
-
-
