@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashSet;
@@ -93,5 +94,34 @@ public class StorageDb implements IStorage {
             return uuids;
         }
     }
+
+    private void createTable() {
+        try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
+             final PreparedStatement stmt = conn.prepareStatement(
+                     "create table if not exists t_camera_storage\n" +
+                             "(\n" +
+                             "    uuid        varchar(64)  not null\n" +
+                             "        primary key,\n" +
+                             "    raw_data    longblob     null,\n" +
+                             "    player_name varchar(256) null,\n" +
+                             "    pos_x       double       null,\n" +
+                             "    pos_y       double       null,\n" +
+                             "    pos_z       double       null,\n" +
+                             "    world_name  varchar(256) null,\n" +
+                             "    time        timestamp    null\n" +
+                             ");"
+             )) {
+            stmt.execute();
+            conn.commit();
+        } catch (final SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+    }
+
+    private void initialize() {
+
+    }
+
 }
 

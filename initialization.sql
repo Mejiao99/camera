@@ -1,5 +1,4 @@
 create database camera_storage;
-CREATE USER camera_usr@localhost IDENTIFIED BY 'manzana546';
 use camera_storage;
 create table t_camera_storage
 (
