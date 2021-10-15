@@ -4,6 +4,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public class StorageFallback implements IStorage {
@@ -35,5 +36,10 @@ public class StorageFallback implements IStorage {
             return optPrimary;
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Set<UUID> listUUID(EntityPlayerMP playerMp) {
+        return null;
     }
 }

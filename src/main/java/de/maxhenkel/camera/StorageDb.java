@@ -11,7 +11,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public class StorageDb implements IStorage {
@@ -65,6 +67,21 @@ public class StorageDb implements IStorage {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public Set<UUID> listUUID(EntityPlayerMP playerMp) throws Exception {
+        final Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/camera_storage", "root", "aguacate978");
+        final PreparedStatement stmt = conn.prepareStatement(
+                "select uuid from t_camera_storage");
+        {
+            final ResultSet resultSet = stmt.executeQuery();
+            final Set<UUID> uuids = new HashSet<>();
+            while (resultSet.next()) {
+                uuids.add(UUID.fromString(resultSet.getString(1)));
+            }
+            return uuids;
+        }
     }
 }
 
