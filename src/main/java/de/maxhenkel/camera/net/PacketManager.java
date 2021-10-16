@@ -29,7 +29,7 @@ public class PacketManager {
     }
 
     public void addBytes(EntityPlayerMP playerMP, UUID imgUUID, int offset, int length, byte[] bytes) {
-        byte[] data;
+        final byte[] data;
         if (!clientDataMap.containsKey(imgUUID)) {
             data = new byte[length];
         } else {
@@ -40,42 +40,37 @@ public class PacketManager {
 
         clientDataMap.put(imgUUID, data);
 
-        if (offset + bytes.length >= data.length) {
-            try {
-                BufferedImage image = completeImage(imgUUID);
-                if (image == null) {
-                    throw new IOException("Image incomplete");
-                }
-                imageCache.put(imgUUID, image);
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            ImageTools.saveImage(playerMP, imgUUID, image);
-
-                            playerMP.getServer().addScheduledTask(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ItemStack stack = new ItemStack(ModItems.IMAGE);
-                                    ItemImage.setUUID(stack, imgUUID);
-                                    ItemImage.setTime(stack, System.currentTimeMillis());
-                                    ItemImage.setOwner(stack, playerMP.getName());
-
-                                    if (!playerMP.addItemStackToInventory(stack)) {
-                                        InventoryHelper.spawnItemStack(playerMP.world, playerMP.posX, playerMP.posY, playerMP.posZ, stack);
-                                    }
-                                }
-                            });
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, "SaveImageThread").start();
-
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (offset + bytes.length < data.length) {
+            return;
+        }
+        try {
+            final BufferedImage image = completeImage(imgUUID);
+            if (image == null) {
+                throw new IOException("Image incomplete");
             }
+            imageCache.put(imgUUID, image);
+
+            new Thread(() -> {
+                try {
+                    ImageTools.saveImage(playerMP, imgUUID, image);
+
+                    playerMP.getServer().addScheduledTask(() -> {
+                        final ItemStack stack = new ItemStack(ModItems.IMAGE);
+                        ItemImage.setUUID(stack, imgUUID);
+                        ItemImage.setTime(stack, System.currentTimeMillis());
+                        ItemImage.setOwner(stack, playerMP.getName());
+
+                        if (!playerMP.addItemStackToInventory(stack)) {
+                            InventoryHelper.spawnItemStack(playerMP.world, playerMP.posX, playerMP.posY, playerMP.posZ, stack);
+                        }
+                    });
+                } catch (final IOException e) {
+                    e.printStackTrace();
+                }
+            }, "SaveImageThread").start();
+
+        } catch (final IOException e) {
+            e.printStackTrace();
         }
     }
 

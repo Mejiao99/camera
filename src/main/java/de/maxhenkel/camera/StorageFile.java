@@ -15,12 +15,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class StorageFile implements IStorage {
-    private Path worldPath;
+    private final Path worldPath;
 
-    public StorageFile(Path worldPath) {
+    public StorageFile(final Path worldPath) {
         this.worldPath = worldPath;
     }
-
 
     @Override
     public void saveImage(final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
@@ -73,7 +72,6 @@ public class StorageFile implements IStorage {
     private UUID strToUuid(String strUuid) {
         try {
             return UUID.fromString(strUuid);
-
         } catch (final Exception e) {
             System.err.println("Cannot parse UUID: " + strUuid);
             return null;
@@ -82,7 +80,6 @@ public class StorageFile implements IStorage {
 
     @Override
     public void initialize() throws Exception {
-
     }
 
 }

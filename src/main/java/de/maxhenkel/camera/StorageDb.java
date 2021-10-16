@@ -26,7 +26,6 @@ public class StorageDb implements IStorage {
              final PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,?)")
         ) {
-
             final Blob blob = conn.createBlob();
             blob.setBytes(1, data.array());
             stmt.setString(1, uuid.toString());
@@ -94,14 +93,17 @@ public class StorageDb implements IStorage {
         }
     }
 
+    @Override
+    public void initialize() throws Exception {
+        createTable();
+    }
+
     private void createTable() throws Exception {
-        System.out.println("createTable executed");
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
                      "create table if not exists t_camera_storage\n" +
                              "(\n" +
-                             "    uuid        varchar(64)  not null\n" +
-                             "        primary key,\n" +
+                             "    uuid        varchar(64)  not null  primary key,\n" +
                              "    raw_data    longblob     null,\n" +
                              "    player_name varchar(256) null,\n" +
                              "    pos_x       double       null,\n" +
@@ -114,14 +116,9 @@ public class StorageDb implements IStorage {
             stmt.execute();
             conn.commit();
         }
-        System.out.println("createTable executed-1");
     }
 
-    @Override
-    public void initialize() throws Exception {
-        new StorageDb().createTable();
 
-    }
 }
 
 

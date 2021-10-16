@@ -52,7 +52,6 @@ public class StorageFallback implements IStorage {
     public void initialize() throws Exception {
         new StorageMigrator(primaryStorage, secondaryStorage)
                 .run();
-
     }
 
 

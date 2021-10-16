@@ -13,10 +13,7 @@ import de.maxhenkel.camera.net.MessageRequestImage;
 import de.maxhenkel.camera.net.MessageTakeImage;
 import de.maxhenkel.camera.net.MessageUpdateImage;
 import de.maxhenkel.camera.net.PacketManager;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -26,7 +23,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 
 public class CommonProxy {
@@ -43,7 +39,7 @@ public class CommonProxy {
     public static PacketManager manager;
     public static IStorage storage;
 
-    public void preinit(FMLPreInitializationEvent event) {
+    public void preinit(final FMLPreInitializationEvent event) {
 
         initConfig(event);
 
@@ -57,16 +53,16 @@ public class CommonProxy {
         CommonProxy.simpleNetworkWrapper.registerMessage(MessageImageUnavailable.class, MessageImageUnavailable.class, 5, Side.CLIENT);
     }
 
-    public void init(FMLInitializationEvent event) {
+    public void init(final FMLInitializationEvent event) {
         NetworkRegistry.INSTANCE.registerGuiHandler(Main.instance(), new GuiHandler());
 
     }
 
-    public void postinit(FMLPostInitializationEvent event) {
+    public void postinit(final FMLPostInitializationEvent event) {
 
     }
 
-    private void initConfig(FMLPreInitializationEvent event) {
+    private void initConfig(final FMLPreInitializationEvent event) {
         try {
             Configuration config = new Configuration(event.getSuggestedConfigurationFile());
             config.load();
@@ -82,22 +78,23 @@ public class CommonProxy {
             System.err.println("tortilla_camera:jdbc_url. " + connectionUrl + " - side:" + event.getSide());
 
             config.save();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    public void serverStarting(FMLServerStartingEvent event) throws Exception {
-        Path worldPath = event.getServer().getEntityWorld().getSaveHandler().getWorldDirectory().toPath();
+    public void serverStarting(final FMLServerStartingEvent event) throws Exception {
+        final Path worldPath = event.getServer().getEntityWorld().getSaveHandler().getWorldDirectory().toPath();
+
         final StorageFile storageFile = new StorageFile(worldPath);
         storageFile.initialize();
+
         final StorageDb storageDb = new StorageDb();
         storageDb.initialize();
+
         storage = new StorageFallback(storageFile, storageDb);
         storage.initialize();
-
-
     }
 
 
