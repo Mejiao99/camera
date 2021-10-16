@@ -5,7 +5,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,12 +18,10 @@ import java.util.Set;
 import java.util.UUID;
 
 public class StorageDb implements IStorage {
-    private boolean isCreated;
 
     @Override
-    public void saveImage(final Path worldPath, final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
+    public void saveImage(final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
             throws Exception {
-        initialize();
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,?)")
@@ -50,8 +47,7 @@ public class StorageDb implements IStorage {
     }
 
     @Override
-    public Optional<ImageAndMetadata> loadImage(final Path worldPath, final UUID uuid) throws Exception {
-        initialize();
+    public Optional<ImageAndMetadata> loadImage(final UUID uuid) throws Exception {
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
                      "select raw_data,player_name,pos_x,pos_y,pos_z,world_name,time" +
@@ -85,10 +81,9 @@ public class StorageDb implements IStorage {
     }
 
     @Override
-    public Set<UUID> listUuids(final Path worldPath) throws Exception {
+    public Set<UUID> listUuids() throws Exception {
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement("select uuid from t_camera_storage")) {
-            initialize();
             final ResultSet resultSet = stmt.executeQuery();
             final Set<UUID> uuids = new HashSet<>();
             final int uuidIdx = resultSet.findColumn("uuid");
@@ -122,17 +117,10 @@ public class StorageDb implements IStorage {
         System.out.println("createTable executed-1");
     }
 
-    private void initialize() throws Exception {
-        if (isCreated) {
-            return;
-        }
-        synchronized (this) {
-            if (isCreated) {
-                return;
-            }
-            new StorageDb().createTable();
-            isCreated = true;
-        }
+    @Override
+    public void initialize() throws Exception {
+        new StorageDb().createTable();
+
     }
 }
 

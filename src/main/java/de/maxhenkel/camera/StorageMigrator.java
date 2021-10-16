@@ -14,10 +14,10 @@ public class StorageMigrator {
         this.to = to;
     }
 
-    public void run(final Path worldPath) throws Exception {
+    public void run() throws Exception {
         System.err.println("Migrating from:" + from.getClass().getSimpleName() + " to:" + to.getClass().getSimpleName());
-        final Set<UUID> uuidsFrom = from.listUuids(worldPath);
-        final Set<UUID> uuidsTo = to.listUuids(worldPath);
+        final Set<UUID> uuidsFrom = from.listUuids();
+        final Set<UUID> uuidsTo = to.listUuids();
 
         System.err.println("From size: " + uuidsFrom.size() + " to size:" + uuidsTo.size());
         final Set<UUID> uuids = new HashSet<>(uuidsFrom);
@@ -26,8 +26,8 @@ public class StorageMigrator {
 
         for (final UUID uuid : uuids) {
             try {
-                final ImageAndMetadata imageAndMetadata = from.loadImage(worldPath, uuid).get();
-                to.saveImage(worldPath, uuid, imageAndMetadata.getImageMetadata(), imageAndMetadata.getByteBuffer());
+                final ImageAndMetadata imageAndMetadata = from.loadImage(uuid).get();
+                to.saveImage(uuid, imageAndMetadata.getImageMetadata(), imageAndMetadata.getByteBuffer());
             } catch (final Exception e) {
                 System.err.println("Skipping. Error migrating image: " + uuid);
                 e.printStackTrace();

@@ -8,44 +8,51 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
-@Mod(modid = Main.MODID, version = Main.VERSION, acceptedMinecraftVersions=Main.MC_VERSION, updateJSON=Main.UPDATE_JSON, dependencies=Main.DEPENDENCIES)
+@Mod(modid = Main.MODID, version = Main.VERSION, acceptedMinecraftVersions = Main.MC_VERSION, updateJSON = Main.UPDATE_JSON, dependencies = Main.DEPENDENCIES)
 public class Main {
 
     public static final String MODID = "camera";
     public static final String VERSION = "1.0.3";
     public static final String MC_VERSION = "[1.12.2]";
-	public static final String UPDATE_JSON = "http://maxhenkel.de/update/camera.json";
-	public static final String DEPENDENCIES = "required-after:forge@[14.23.2.2611,);";
+    public static final String UPDATE_JSON = "http://maxhenkel.de/update/camera.json";
+    public static final String DEPENDENCIES = "required-after:forge@[14.23.2.2611,);";
 
-	@Instance
+    @Instance
     private static Main instance;
 
-	@SidedProxy(clientSide="de.maxhenkel.camera.proxy.ClientProxy", serverSide="de.maxhenkel.camera.proxy.CommonProxy")
+    @SidedProxy(clientSide = "de.maxhenkel.camera.proxy.ClientProxy", serverSide = "de.maxhenkel.camera.proxy.CommonProxy")
     public static CommonProxy proxy;
 
-	public Main() {
-		instance=this;
-	}
-
-    @EventHandler
-    public void preinit(FMLPreInitializationEvent event){
-		proxy.preinit(event);
+    public Main() {
+        instance = this;
     }
 
     @EventHandler
-    public void init(FMLInitializationEvent event){
-
-    	 proxy.init(event);
+    public void preinit(FMLPreInitializationEvent event) {
+        proxy.preinit(event);
     }
 
     @EventHandler
-    public void postinit(FMLPostInitializationEvent event){
-		proxy.postinit(event);
+    public void init(FMLInitializationEvent event) {
+
+        proxy.init(event);
     }
 
-	public static Main instance() {
-		return instance;
-	}
+    @EventHandler
+    public void postinit(FMLPostInitializationEvent event) {
+        proxy.postinit(event);
+    }
+
+    @EventHandler
+    public void serverStarting(FMLServerStartingEvent event) throws Exception {
+        proxy.serverStarting(event);
+
+    }
+
+    public static Main instance() {
+        return instance;
+    }
 
 }
