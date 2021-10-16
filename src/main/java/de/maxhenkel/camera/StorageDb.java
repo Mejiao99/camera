@@ -5,7 +5,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,12 +20,13 @@ import java.util.UUID;
 public class StorageDb implements IStorage {
 
     @Override
-    public void saveImage(final Path worldPath, final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
+    public void saveImage(final UUID uuid, final ImageMetadata metadata, final ByteBuffer data)
             throws Exception {
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO t_camera_storage(uuid,raw_data,player_name,pos_x,pos_y,pos_z, world_name,time) VALUES(?,?,?,?,?,?,?,?)")
         ) {
+
             final Blob blob = conn.createBlob();
             blob.setBytes(1, data.array());
             stmt.setString(1, uuid.toString());
@@ -47,7 +47,7 @@ public class StorageDb implements IStorage {
     }
 
     @Override
-    public Optional<ImageAndMetadata> loadImage(final Path worldPath, final UUID uuid) throws Exception {
+    public Optional<ImageAndMetadata> loadImage(final UUID uuid) throws Exception {
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement(
                      "select raw_data,player_name,pos_x,pos_y,pos_z,world_name,time" +
@@ -81,7 +81,7 @@ public class StorageDb implements IStorage {
     }
 
     @Override
-    public Set<UUID> listUuids(final Path worldPath) throws Exception {
+    public Set<UUID> listUuids() throws Exception {
         try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
              final PreparedStatement stmt = conn.prepareStatement("select uuid from t_camera_storage")) {
             final ResultSet resultSet = stmt.executeQuery();
@@ -93,5 +93,36 @@ public class StorageDb implements IStorage {
             return uuids;
         }
     }
+
+    private void createTable() throws Exception {
+        System.out.println("createTable executed");
+        try (final Connection conn = DriverManager.getConnection(CommonProxy.connectionUrl, CommonProxy.dbUser, CommonProxy.dbPassword);
+             final PreparedStatement stmt = conn.prepareStatement(
+                     "create table if not exists t_camera_storage\n" +
+                             "(\n" +
+                             "    uuid        varchar(64)  not null\n" +
+                             "        primary key,\n" +
+                             "    raw_data    longblob     null,\n" +
+                             "    player_name varchar(256) null,\n" +
+                             "    pos_x       double       null,\n" +
+                             "    pos_y       double       null,\n" +
+                             "    pos_z       double       null,\n" +
+                             "    world_name  varchar(256) null,\n" +
+                             "    time        timestamp    null\n" +
+                             ");"
+             )) {
+            stmt.execute();
+            conn.commit();
+        }
+        System.out.println("createTable executed-1");
+    }
+
+    @Override
+    public void initialize() throws Exception {
+        new StorageDb().createTable();
+
+    }
 }
+
+
 

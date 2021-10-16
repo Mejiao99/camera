@@ -13,14 +13,20 @@ import de.maxhenkel.camera.net.MessageRequestImage;
 import de.maxhenkel.camera.net.MessageTakeImage;
 import de.maxhenkel.camera.net.MessageUpdateImage;
 import de.maxhenkel.camera.net.PacketManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 
 public class CommonProxy {
@@ -54,10 +60,6 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {
         NetworkRegistry.INSTANCE.registerGuiHandler(Main.instance(), new GuiHandler());
 
-        final StorageFile storageFile = new StorageFile();
-        final StorageDb storageDb = new StorageDb();
-
-        storage = new StorageFallback(storageFile, storageDb);
     }
 
     public void postinit(FMLPostInitializationEvent event) {
@@ -84,5 +86,19 @@ public class CommonProxy {
             e.printStackTrace();
         }
     }
+
+
+    public void serverStarting(FMLServerStartingEvent event) throws Exception {
+        Path worldPath = event.getServer().getEntityWorld().getSaveHandler().getWorldDirectory().toPath();
+        final StorageFile storageFile = new StorageFile(worldPath);
+        storageFile.initialize();
+        final StorageDb storageDb = new StorageDb();
+        storageDb.initialize();
+        storage = new StorageFallback(storageFile, storageDb);
+        storage.initialize();
+
+
+    }
+
 
 }

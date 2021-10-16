@@ -57,7 +57,6 @@ public class ImageTools {
         imageMetadata.setTimestamp(Instant.now());
         try {
             CommonProxy.storage.saveImage(
-                    playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(),
                     uuid,
                     imageMetadata,
                     ByteBuffer.wrap(bytes));
@@ -72,7 +71,6 @@ public class ImageTools {
         final Optional<ImageAndMetadata> optImageAndMetadata;
         try {
             optImageAndMetadata = CommonProxy.storage.loadImage(
-                    playerMP.getServerWorld().getSaveHandler().getWorldDirectory().toPath(),
                     uuid);
         } catch (final Exception e) {
             throw new IOException("Error loading: " + uuid, e);
