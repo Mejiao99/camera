@@ -36,6 +36,7 @@ dependencies {
     deobfProvided "mezz.jei:jei_${mod_minecraft_version}:${jei_version}:api"
     // at runtime, use the full JEI jar
     runtime "mezz.jei:jei_${mod_minecraft_version}:${jei_version}"
+    runtime 'org.mariadb.jdbc:mariadb-java-client:2.7.3'
 }
 
 processResources {

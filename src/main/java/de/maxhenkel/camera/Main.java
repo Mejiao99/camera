@@ -39,7 +39,7 @@ public class Main {
     }
 
     @Mod.EventHandler
-    public void serverStarting(FMLServerStartingEvent event) {
+    public void serverStarting(FMLServerStartingEvent event) throws Exception {
         proxy.serverStarting(event);
     }
 
